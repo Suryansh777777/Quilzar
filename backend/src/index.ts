@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-
+import { cors } from 'hono/cors'
 import { userRouter } from './routes/user'
 import { blogRouter } from './routes/blog'
 // whenever you want to use env variables you need to define them in the type of the app
@@ -10,6 +10,7 @@ const app = new Hono<{
   },
 }>()
 
+app.use('/api/*', cors())
 app.route('/api/v1/user', userRouter)
 app.route('/api/v1/blog', blogRouter)
 
