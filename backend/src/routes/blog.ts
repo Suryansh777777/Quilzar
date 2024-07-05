@@ -21,7 +21,7 @@ export const blogRouter = new Hono<{
     const token = authHeader.split(' ')[1]
     const response = await verify(authHeader, c.env.JWT_SECRET)
     if (response) {
-        c.set("userId", response.id as string)
+        c.set("userId", response.id )
        await next()
     }else{
        c.status(403)
@@ -43,7 +43,7 @@ export const blogRouter = new Hono<{
               data: {
                   title: body.title,
                   content: body.content,
-                  authorId: authorId
+                  authorId: Number(authorId)
               }
           });
       
@@ -76,33 +76,36 @@ export const blogRouter = new Hono<{
             return c.status(403);
         }
   })
+
+ //you should do pagination on this 
+ blogRouter.get('/bulk', async(c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate())
+
+    const post = await prisma.post.findMany();
+    return c.json({post })
+  })
+
+
   //'/:id' might be a bug
   blogRouter.get('/:id', async(c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
-    
-      const body = await c.req.json();
+      const id =  c.req.param("id");
         try {
             const post = await prisma.post.findFirst({
                 where:{
-                    id: body.id
+                    id: Number(id)
                 },
                
             });
         
-           
         return c.json(post)
         } catch(e) {
             return c.status(403);
         }
   })
 
-  //you should do pagination on this 
-  blogRouter.get('/bulk', async(c) => {
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-
-    const post = await prisma.post.findMany();
-  })
+ 
